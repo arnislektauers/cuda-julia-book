@@ -1,0 +1,25 @@
+# Julia
+Manifest.toml.local
+/*.cov
+*.jl.cov
+*.jl.*.cov
+deps/deps.jl
+docs/build/
+
+# Snippets regenerated from src/ by `make listings` are ignored; the few
+# hand-authored standalone listings that have no src/ tagged region are kept.
+/listings/*
+!/listings/ch01_device_query.jl
+!/listings/ch01_vec_add_gpu.jl
+!/listings/ch08_cuda_graph_capture.jl
+!/listings/ch12_sobel_kernel.jl
+
+# Listing-runner outputs (generated on the GPU host)
+tools/listing-runner/logs-*/
+tools/listing-runner/results-*.tsv
+tools/listing-runner/env-*/
+
+# Editor / OS
+.DS_Store
+*.swp
+.vscode/
