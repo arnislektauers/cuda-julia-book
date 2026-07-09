@@ -44,7 +44,7 @@ p = Float32[1.5, 1.0, 3.0, 1.0]
 prob = ODEProblem(lotka_volterra!, u0, tspan, p)
 
 # Generate 10,000 parameter variations
-function prob_func(prob, ctx)
+function prob_func(prob, i, repeat)
     remake(prob; p = prob.p .* (1.0f0 .+ 0.1f0 .* randn(Float32, 4)))
 end
 
@@ -69,7 +69,7 @@ prob = ODEProblem{false}(lotka_volterra,
                          SVector{4, Float32}(1.5f0, 1.0f0, 3.0f0, 1.0f0))
 
 # Vary parameters across the ensemble via SVector
-function prob_func(prob, ctx)
+function prob_func(prob, i, repeat)
     remake(prob; p = prob.p .* (1.0f0 .+ 0.1f0 .* @SVector(randn(Float32, 4))))
 end
 

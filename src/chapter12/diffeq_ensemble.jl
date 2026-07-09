@@ -20,7 +20,7 @@ p = @SVector Float32[0.3, 0.1]
 prob = ODEProblem{false}(sir, u0, tspan, p)
 
 # Vary parameters across ensemble
-function prob_func(prob, ctx)
+function prob_func(prob, i, repeat)
     remake(prob, p = @SVector Float32[
         0.1f0 + 0.4f0 * rand(Float32),
         0.05f0 + 0.15f0 * rand(Float32)

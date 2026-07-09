@@ -83,3 +83,4 @@ T1	exec	src/chapter13/kernel_design.jl
 SKIP:experimental	exec	src/chapter13/packaging.jl
 T1	exec	src/chapter13/portable_kernels.jl
 SKIP:non-NVIDIA	exec	src/chapter13/testing.jl
+T1	exec	src/chapter12/digital_twin.jl
