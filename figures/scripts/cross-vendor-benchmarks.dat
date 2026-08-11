@@ -1,4 +1,0 @@
-# vendor_idx  saxpy_native_gbps  saxpy_ka_gbps  matmul_native  matmul_ka
-1  2900.00  2750.00  1.00  0.95
-2  1900.00  1800.00  1.00  0.94
-3  1400.00  1320.00  1.00  0.93
