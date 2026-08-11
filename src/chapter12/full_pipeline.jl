@@ -1,7 +1,7 @@
 # End-to-end pipeline: Data ingestion -> GPU training -> Visualization
 
 # --- begin:full_pipeline ---
-using Flux, CUDA, DataFrames, CSV, CairoMakie, Statistics
+using Flux, CUDA, cuDNN, DataFrames, CSV, CairoMakie, Statistics
 
 # Stage 1: Data Ingestion
 df = CSV.read("training_data.csv", DataFrame)

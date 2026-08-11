@@ -18,6 +18,15 @@ asyncmap(zip(workers(), CUDA.devices())) do (p, dev)
 end
 # --- end:distributed_gpu_setup ---
 
+# Not part of either listing: each tagged region above and below is a complete,
+# standalone example that spawns one worker per GPU. Run end to end as one file,
+# they would spawn two workers per GPU -- and because the cluster's GPUs are in
+# Exclusive_Process mode, the second set cannot retain a context on a device the
+# first set already holds, and dies with
+#   CUDA error: CUDA-capable device(s) is/are busy or unavailable (code 46)
+# Releasing the first set here lets the file run as the sum of its listings.
+rmprocs(workers())
+
 # --- begin:monte_carlo_distributed ---
 using Distributed, CUDA
 

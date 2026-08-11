@@ -31,7 +31,7 @@ threads = 256
 blocks = cld(N, threads)
 @cuda threads=threads blocks=blocks scale_kernel!(A, 3.0f0)
 
-# 4. Synchronize — wait for GPU to finish
+# 4. Synchronize: wait for GPU to finish
 CUDA.synchronize()
 
 # 5. Verify results on CPU
@@ -46,7 +46,7 @@ println("All $(N) elements correctly scaled to 3.0")
 function debug_kernel!(A)
     i = (blockIdx().x - Int32(1)) * blockDim().x + threadIdx().x
     if i <= length(A)
-        A[i] = A[i] * 2.0f0   # No @inbounds — bounds are checked
+        A[i] = A[i] * 2.0f0   # No @inbounds: bounds are checked
     end
     return nothing
 end

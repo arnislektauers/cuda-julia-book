@@ -33,9 +33,10 @@ function laplacian_3d_kernel!(out, u, dx2, dy2, dz2)
 
     nx, ny, nz = size(u)
     if 2 <= ix <= nx-1 && 2 <= iy <= ny-1 && 2 <= iz <= nz-1
-        @inbounds out[ix,iy,iz] = (u[ix-1,iy,iz] - 2*u[ix,iy,iz] + u[ix+1,iy,iz]) / dx2 +
-                                   (u[ix,iy-1,iz] - 2*u[ix,iy,iz] + u[ix,iy+1,iz]) / dy2 +
-                                   (u[ix,iy,iz-1] - 2*u[ix,iy,iz] + u[ix,iy,iz+1]) / dz2
+        @inbounds out[ix,iy,iz] =
+            (u[ix-1,iy,iz] - 2*u[ix,iy,iz] + u[ix+1,iy,iz]) / dx2 +
+            (u[ix,iy-1,iz] - 2*u[ix,iy,iz] + u[ix,iy+1,iz]) / dy2 +
+            (u[ix,iy,iz-1] - 2*u[ix,iy,iz] + u[ix,iy,iz+1]) / dz2
     end
     return nothing
 end

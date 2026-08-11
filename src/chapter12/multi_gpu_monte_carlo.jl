@@ -49,3 +49,22 @@ function multi_gpu_monte_carlo_pi(N_per_gpu::Int)
     return sum(results) / ngpus
 end
 # --- end:multi_gpu_mc ---
+
+# ---------------------------------------------------------------------------
+# Driver, outside the tagged region so the book is unaffected.
+#
+# On a single-GPU host this exercises the one-device path: the loop runs once,
+# ngpus == 1, and the average is over a single result. The multi-device
+# behaviour -- work actually split across devices -- can only be checked where
+# there is more than one, so what this asserts is the estimator, not the split.
+#
+# The tolerance is derived, not guessed: the estimate has standard error
+# 4*sqrt(p(1-p)/N) with p = pi/4, which is 5.2e-4 at N = 1e7. 0.01 is ~19
+# sigma, so a passing run is not luck and a failing one is a real defect.
+let N = 10_000_000
+    est = multi_gpu_monte_carlo_pi(N)
+    ngpus = length(CUDA.devices())
+    @assert isapprox(est, pi; atol = 0.01) "estimate $est is not pi within 0.01"
+    println("multi_gpu_monte_carlo_pi: $(round(est, digits=5)) over $ngpus GPU(s) CORRECT",
+            ngpus == 1 ? " (single-device path only)" : "")
+end

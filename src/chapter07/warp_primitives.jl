@@ -66,3 +66,23 @@ end
     return val
 end
 # --- end:warp_scan ---
+
+# ---------------------------------------------------------------------------
+# Driver, outside the tagged region so the book is unaffected. One element per
+# thread here (no grid-stride loop), so the launch must cover the input
+# exactly: blocks = cld(N, threads), and N a multiple of threads keeps the
+# tail case out of the way of what is being checked.
+#
+# Summing ones makes a lost or double-counted element an integer discrepancy
+# rather than a rounding difference.
+let N = 1 << 16, threads = 256
+    blocks = cld(N, threads)
+    input = CUDA.ones(Float32, N)
+    output = CUDA.zeros(Float32, blocks)
+    @cuda threads=threads blocks=blocks shmem=32*sizeof(Float32) block_reduce_sum!(output, input)
+    CUDA.synchronize()
+    per_block = Array(output)
+    @assert all(per_block .== Float32(threads)) "per-block sums: $(unique(per_block))"
+    @assert sum(per_block) == Float32(N) "total: $(sum(per_block)), expected $N"
+    println("block_reduce_sum!: $(Int(sum(per_block))) == $N CORRECT")
+end

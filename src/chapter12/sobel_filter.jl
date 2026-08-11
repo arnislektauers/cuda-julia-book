@@ -1,3 +1,18 @@
+# Sobel edge detection on a real photograph -- companion-repository variant.
+#
+# This file is NOT the version printed in the book: it contributes no tagged
+# regions. The printed listing is the dependency-free, synthetic-image variant
+# in sobel_basic.jl, which the chapter text describes (clamped borders, 2D
+# thread indexing) and which the shared-memory follow-up in sobel_shared.jl
+# builds on.
+#
+# What this variant adds, and why it is worth keeping: a real 8-bit test image
+# (cameraman) with the 0-255 conversion, and a `sobel_cpu` reference for
+# validating the GPU result -- the correctness check that Chapter 12's coding
+# exercise 1 asks the reader to write. Note two deliberate differences from the
+# printed kernel: borders are zeroed rather than clamped, and the thread mapping
+# is a flat 1D index decomposed into column-major (x, y) rather than a 2D grid.
+# It needs Images.jl and TestImages.jl, so it runs in the extended "T2" tier.
 using Images
 using CUDA
 using TestImages

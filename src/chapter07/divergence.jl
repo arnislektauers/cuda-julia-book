@@ -61,3 +61,32 @@ function activation_branchless!(out, x)
     return nothing
 end
 # --- end:activation_branchless ---
+
+# ---------------------------------------------------------------------------
+# Driver, outside the tagged region so the book is unaffected. Both pairs claim
+# the branchless form is equivalent to the branching one, so each pair is
+# checked against its partner and against the formula.
+#
+# The inputs straddle every boundary the three-way activation tests: above 0,
+# between -1 and 0, and below -1. A range that missed one would leave a branch
+# unexercised while still passing.
+let N = 1 << 16
+    x = CuArray(Float32.(range(-2.0f0, 2.0f0; length = N)))
+    a = Array(x)
+    o1, o2 = CUDA.zeros(Float32, N), CUDA.zeros(Float32, N)
+
+    @cuda threads=256 blocks=cld(N, 256) relu_divergent!(o1, x)
+    @cuda threads=256 blocks=cld(N, 256) relu_branchless!(o2, x)
+    CUDA.synchronize()
+    @assert Array(o1) == Array(o2) "relu: branchless disagrees with branching"
+    @assert Array(o2) == max.(a, 0.0f0) "relu: does not match max(x, 0)"
+
+    # Grid-stride loops, so the launch need not cover the input exactly.
+    @cuda threads=256 blocks=64 activation_divergent!(o1, x)
+    @cuda threads=256 blocks=64 activation_branchless!(o2, x)
+    CUDA.synchronize()
+    want = [xi > 0 ? xi : (xi > -1.0f0 ? xi + 0.5f0 * xi * xi : 0.0f0) for xi in a]
+    @assert Array(o1) == Array(o2) "activation: branchless disagrees with branching"
+    @assert Array(o2) == want "activation: does not match the three-way formula"
+    println("relu_*/activation_*: branchless matches branching, both CORRECT")
+end

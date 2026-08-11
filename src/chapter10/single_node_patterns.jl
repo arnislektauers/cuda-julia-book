@@ -103,9 +103,33 @@ c = multi_gpu_vadd(a, b)
 @assert c ≈ a .+ b
 # --- end:vector_add_multi_gpu ---
 
+# Not part of any listing: a two-stream sketch of the overlap that the
+# `overlap_computation` region below develops properly. It is kept for
+# reference, so the buffers and kernel it needs are defined here rather than
+# assumed. `compute_kernel!` is also what the published region calls.
+function compute_kernel!(y, x)
+    i = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    if i <= length(y)
+        @inbounds y[i] = 2.0f0 * x[i] + 1.0f0
+    end
+    return nothing
+end
+
+function compute_kernel!(x)
+    i = (blockIdx().x - 1) * blockDim().x + threadIdx().x
+    if i <= length(x)
+        @inbounds x[i] = 2.0f0 * x[i] + 1.0f0
+    end
+    return nothing
+end
+
 CUDA.device!(0)
 compute_stream = CuStream()
 transfer_stream = CuStream()
+
+d_data = CUDA.rand(Float32, 256 * 1024)
+d_prev_result = CUDA.rand(Float32, 256 * 1024)
+d_remote_buf = CUDA.zeros(Float32, 256 * 1024)
 
 # Launch computation on one stream
 CUDA.stream!(compute_stream) do

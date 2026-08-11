@@ -3,12 +3,12 @@
 using CUDA
 
 # --- begin:dispatch_kernel ---
-# Generic inner function — works for any AbstractFloat
+# Generic inner function: works for any AbstractFloat
 function compute(x::T, y::T) where T <: AbstractFloat
     return x * y + x
 end
 
-# GPU kernel — dispatch resolves at compile time
+# GPU kernel: dispatch resolves at compile time
 function my_kernel!(out, a, b)
     i = (blockIdx().x - Int32(1)) * blockDim().x + threadIdx().x
     if i <= length(out)

@@ -54,3 +54,38 @@ function dynamic_work!(output, input, counter)
     return nothing
 end
 # --- end:dynamic_work ---
+
+# ---------------------------------------------------------------------------
+# Driver, outside the tagged region so the book is unaffected.
+#
+# expensive_computation is the placeholder the dynamic_work listing calls and
+# never defines; supplying it here is what makes the file runnable at all.
+@inline expensive_computation(x) = sqrt(x) * 2.0f0 + 1.0f0
+
+let N = 1 << 16
+    A = CUDA.rand(Float32, N)
+    a = Array(A)
+    want = sqrt.(a) .* 2.0f0 .+ 1.0f0
+
+    # Fusion's claim is identical output from one kernel instead of two.
+    B = CUDA.zeros(Float32, N)
+    C1 = CUDA.zeros(Float32, N)
+    C2 = CUDA.zeros(Float32, N)
+    @cuda threads=256 blocks=cld(N, 256) step1!(B, A)
+    @cuda threads=256 blocks=cld(N, 256) step2!(C1, B)
+    @cuda threads=256 blocks=cld(N, 256) fused_step!(C2, A)
+    CUDA.synchronize()
+    @assert Array(C1) == Array(C2) "fused kernel differs from the split pair"
+    @assert Array(C2) == want "neither matches sqrt(x)*2+1"
+
+    # Dynamic work distribution: fewer blocks than chunks, so blocks must come
+    # back for more work. Every element still has to be written exactly once --
+    # a claim race would leave gaps or double-process, and only checking the
+    # whole output catches that.
+    out = CUDA.fill(-1.0f0, N)
+    counter = CUDA.zeros(Int32, 1)
+    @cuda threads=256 blocks=8 dynamic_work!(out, A, counter)
+    CUDA.synchronize()
+    @assert Array(out) == want "dynamic work queue left gaps or wrong values"
+    println("kernel fusion and dynamic_work!: CORRECT")
+end

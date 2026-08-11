@@ -2,6 +2,14 @@
 
 using CUDA
 
+# Particle is introduced in the chapter text (an immutable, isbits struct);
+# repeated here so this source file compiles and runs standalone.
+struct Particle
+    pos::NTuple{3, Float32}
+    vel::NTuple{3, Float32}
+    mass::Float32
+end
+
 # --- begin:step_kernel ---
 function step_kernel!(particles::CuDeviceArray{Particle, 1}, 
     dt::Float32)
@@ -37,7 +45,7 @@ kernel_good!(out, box::TypedBox) = out[threadIdx().x] = box.value * 2.0f0
 
 # Pattern 2: Abstract field types
 struct BadConfig
-    value::Real          # Abstract field — makes entire struct GPU-incompatible
+    value::Real          # Abstract field: makes entire struct GPU-incompatible
 end
 
 struct GoodConfig{T<:Real}

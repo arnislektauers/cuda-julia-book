@@ -5,7 +5,7 @@ using CUDA
 # --- begin:cuarray_allocation ---
 using CUDA
 
-# Uninitialized allocation (fastest — no fill operation)
+# Uninitialized allocation (fastest: no fill operation)
 A = CuArray{Float32}(undef, 1024, 1024)
 
 # Zero-initialized arrays

@@ -1,5 +1,10 @@
-SKIP:installs-pkgs	exec	src/appendix/cuda_setup.jl
-T1	DEFONLY	src/chapter01/vectors.jl
+# Verified 2026-08-07: resolves CUDA, downloads the toolkit and prints
+# versioninfo(). Excluded from the sweep only because it mutates whatever
+# environment it runs in -- give it a throwaway one:
+#
+#   julia --project=$(mktemp -d) src/appendix/cuda_setup.jl
+SKIP:mutates-env	exec	src/appendix/cuda_setup.jl
+T1	exec	src/chapter01/vectors.jl
 T1	exec	src/chapter02/compilation_pipeline.jl
 T1	exec	src/chapter02/dispatch.jl
 T1	exec	src/chapter02/types_and_structs.jl
@@ -7,80 +12,184 @@ T1	exec	src/chapter03/array_basics.jl
 T1	exec	src/chapter03/kernels_comparison.jl
 T1	exec	src/chapter03/operations.jl
 T1	exec	src/chapter04/device_query.jl
-T1	DEFONLY	src/chapter04/divergence_example.jl
+T1	exec	src/chapter04/divergence_example.jl
 T1	exec	src/chapter04/thread_indexing.jl
 T1	exec	src/chapter04/vector_scaling.jl
-T1	DEFONLY	src/chapter05/divergence.jl
 T1	exec	src/chapter05/dot_product.jl
 T1	exec	src/chapter05/elementwise_add.jl
 T1	exec	src/chapter05/histogram.jl
 T1	exec	src/chapter05/matrix_scaling.jl
 T1	exec	src/chapter05/multidim_kernels.jl
-T1	DEFONLY	src/chapter05/sync_example.jl
+T1	exec	src/chapter05/sync_example.jl
 T1	exec	src/chapter06/coalescing.jl
-T1	DEFONLY	src/chapter06/lifecycle.jl
+T1	exec	src/chapter06/lifecycle.jl
 T1	exec	src/chapter06/memory_basics.jl
-T1	DEFONLY	src/chapter06/race_condition.jl
+T1	exec	src/chapter06/race_condition.jl
 T1	exec	src/chapter06/shared_memory.jl
 T1	exec	src/chapter06/texture_filter.jl
 T1	exec	src/chapter06/tiled_matmul.jl
 T1	exec	src/chapter06/transfers.jl
-T1	DEFONLY	src/chapter07/atomics.jl
-T1	DEFONLY	src/chapter07/divergence.jl
-T1	DEFONLY	src/chapter07/kernel_fusion.jl
-T1	DEFONLY	src/chapter07/launch_config.jl
+T1	exec	src/chapter07/atomics.jl
+T1	exec	src/chapter07/divergence.jl
+T1	exec	src/chapter07/kernel_fusion.jl
+T1	exec	src/chapter07/launch_config.jl
 T1	exec	src/chapter07/matmul_optimized.jl
 T1	exec	src/chapter07/monte_carlo.jl
-T1	DEFONLY	src/chapter07/pipeline.jl
+T1	exec	src/chapter06/pipeline.jl
 T1	exec	src/chapter07/profiling.jl
-T1	DEFONLY	src/chapter07/reductions.jl
-T1	DEFONLY	src/chapter07/register_reuse.jl
-T1	DEFONLY	src/chapter07/warp_primitives.jl
-T1	DEFONLY	src/chapter08/atomics_advanced.jl
+T1	exec	src/chapter07/reductions.jl
+T1	exec	src/chapter07/register_reuse.jl
+T1	exec	src/chapter07/warp_primitives.jl
+T1	exec	src/chapter08/atomics_advanced.jl
 T1	exec	src/chapter08/cooperative_groups.jl
-T1	exec	src/chapter08/cuda_libraries.jl
-SKIP:experimental	DEFONLY	src/chapter08/cutile.jl
-T1	DEFONLY	src/chapter08/dynamic_parallelism.jl
-T1	DEFONLY	src/chapter08/interop.jl
+T2	exec	src/chapter08/cuda_libraries.jl
+# Verified 2026-08-10 on driver 580.178.04 / CUDA 13.3, cuTile 0.3.2. Kernel
+# launched and checked against a CPU reference, not merely loaded.
+#
+# History worth keeping: this used to fail with
+#   UndefVarError: `tileiras` not defined in `CUDA_Compiler_jll`
+# which looks like a package-version problem but is not. cuTile needs a CUDA 13
+# driver (580+). On the old 560.35.03 driver CUDA.jl resolved a CUDA 12 toolkit,
+# and that build of CUDA_Compiler_jll ships no tileiras at all. The CUDA 13
+# toolchain pulls CUDA_Tile_jll, which supplies it. No cuTile release could have
+# fixed it; only the driver upgrade did.
+#
+# Out of the sweep because cuTile is not in the env-T1 dependency set and is
+# experimental enough that adding it risks perturbing resolution for every other
+# T1 listing. Run it by hand in a throwaway environment:
+#
+#   D=$(mktemp -d); LD_LIBRARY_PATH= ~/.juliaup/bin/julia --project=$D -e '
+#     using Pkg; Pkg.add("CUDA"); Pkg.add("cuTile"); using CUDA
+#     include("src/chapter08/cutile.jl")
+#     N=1024; tile=256
+#     a=CUDA.rand(Float32,N); b=CUDA.rand(Float32,N); c=CUDA.zeros(Float32,N)
+#     @cuda backend=ct blocks=cld(N,tile) vadd_tiles(a,b,c,ct.Constant(tile))
+#     CUDA.synchronize(); @assert Array(c) ≈ Array(a).+Array(b)'
+#
+# Note backend=ct, not backend=cuTile: the listing binds the module as `ct` via
+# `import cuTile as ct`, so the bare name cuTile is not in scope. Launching with
+# backend=cuTile after only that import fails with UndefVarError.
+SKIP:manual-experimental	exec	src/chapter08/cutile.jl
+T1	exec	src/chapter08/dynamic_parallelism.jl
+# Verified 2026-08-07. The listing ccalls into "path/to/libmykernels.so", a
+# library the reader builds; the driver compiles exactly that with nvcc and
+# checks the result, which is what finally exercised the CuPtr{Cfloat}
+# device-pointer signature. Needs nvcc on PATH, so it stays out of the sweep.
+SKIP:needs-nvcc	exec	src/chapter08/interop.jl
 T1	exec	src/chapter08/tensor_cores.jl
-T1	DEFONLY	src/chapter08/warp_advanced.jl
-SKIP:non-NVIDIA	exec	src/chapter09/amdgpu_examples.jl
+T1	exec	src/chapter08/warp_advanced.jl
+# Needs an AMD GPU with ROCm. RTU has none: its `epyc` nodes are AMD CPUs
+# with NVIDIA GPUs. The file carries a driver written against AMDGPU.jl's
+# documented semantics but NEVER RUN -- the only file in the book verified
+# on no hardware. On a rented ROCm box:
+#
+#   rocminfo | grep -E 'Name:|gfx'        # confirm a device before installing
+#   julia --project=@amdgpu -e 'using Pkg; Pkg.add("AMDGPU")'
+#   julia --project=@amdgpu src/chapter09/amdgpu_examples.jl
+#
+# VERIFIED 2026-08-07 on a rented RunPod MI300X (gfx942) with
+# rocm/dev-ubuntu-22.04:6.4.4. Two traps, both costing an attempt:
+#
+#   1. The :latest image shipped ROCm 7.14, and the FIRST device allocation --
+#      even 8 elements -- hung in the kernel driver, never returning from
+#        hipMallocFromPoolAsync -> hsa_amd_vmem_set_access
+#          -> hsaKmtMemoryVaMap -> drmIoctl -> ioctl
+#      A runtime newer than the host's amdgpu driver stalls on that VA-mapping
+#      path. Fix the IMAGE, not the environment: 6.4.4 allocated immediately.
+#   2. The plain dev image ships HIP but no math libraries, so AMDGPU.rand
+#      fails with `undefined symbol: rocrand_create_generator`. Either use a
+#      -complete tag (much larger) or `apt-get install -y rocrand`, which is
+#      all this file needs.
+SKIP:amd-gpu	exec	src/chapter09/amdgpu_examples.jl
 T1	exec	src/chapter09/dispatch_portability.jl
 T1	exec	src/chapter09/ka_basics.jl
-SKIP:non-NVIDIA	exec	src/chapter09/metal_examples.jl
-SKIP:non-NVIDIA	exec	src/chapter09/oneapi_examples.jl
-T1	exec	src/chapter10/device_management.jl
+# Verified on Apple Silicon (M2 Max, macOS 26.6, Metal.jl 1.10.1) rather than
+# on the NVIDIA host this runner targets. To repeat it on a Mac:
+#
+#   julia --project=@metal -e 'using Pkg; Pkg.add("Metal")'
+#   julia --project=@metal src/chapter09/metal_examples.jl
+#
+# The file carries its own checks, so a silent exit 0 is not the pass
+# criterion -- it prints a CORRECT line.
+SKIP:apple-silicon	exec	src/chapter09/metal_examples.jl
+# Verified on homebox's integrated UHD 770 (i5-13600K, oneAPI.jl 2.8.0), not
+# on the CUDA device this runner sweeps, so it needs its own environment:
+#
+#   julia --project=@oneapi -e 'using Pkg; Pkg.add("oneAPI")'
+#   julia --project=@oneapi src/chapter09/oneapi_examples.jl
+#
+# The iGPU is disabled in UEFI by default when a discrete card is fitted.
+# Enabling it does not move the display: keep Primary Display on PEG/PCIe and
+# the iGPU appears as a compute-only Level Zero device.
+SKIP:intel-gpu	exec	src/chapter09/oneapi_examples.jl
+SKIP:multi-GPU	exec	src/chapter10/device_management.jl
 T1	exec	src/chapter10/distributed_parallel.jl
 SKIP:multi-GPU	exec	src/chapter10/mpi_cuda.jl
 SKIP:multi-GPU	exec	src/chapter10/nccl_communication.jl
 SKIP:multi-GPU	exec	src/chapter10/scaling.jl
 SKIP:multi-GPU-semantics	exec	src/chapter10/single_node_patterns.jl
-SKIP:multi-GPU	exec	src/chapter10/task_scheduling.jl
 T2	exec	src/chapter11/data_science.jl
 T2	exec	src/chapter11/diffeq.jl
-T2	exec	src/chapter11/ml.jl
+T2	exec	src/chapter11/ml_flux.jl
+T2	exec	src/chapter11/ml_lux.jl
+T2	exec	src/chapter11/ml_autodiff.jl
+T2	exec	src/chapter11/ml_cnn_training.jl
 T2	exec	src/chapter11/multi_package.jl
-T2	exec	src/chapter11/visualization.jl
+# GLMakie opens a window, so it sits in its own tier: `run.sh T2-display`,
+# which reuses env-T2 but first checks that DISPLAY resolves to hardware GL.
+T2-display	exec	src/chapter11/visualization_glmakie.jl
+T2	exec	src/chapter11/visualization_cairomakie.jl
 T1	exec	src/chapter12/cublas_benchmark.jl
 T2	exec	src/chapter12/diffeq_ensemble.jl
 T2	exec	src/chapter12/flux_custom_kernel.jl
+# make_training_data.jl must run first: it writes the
+# training_data.csv that full_pipeline.jl ingests.
+T2	exec	src/chapter12/make_training_data.jl
 T2	exec	src/chapter12/full_pipeline.jl
 T1	exec	src/chapter12/harris_corner.jl
-T1	DEFONLY	src/chapter12/heat_equation.jl
+T1	exec	src/chapter12/heat_equation.jl
 T1	exec	src/chapter12/median_filter.jl
 T1	exec	src/chapter12/monte_carlo.jl
-T1	DEFONLY	src/chapter12/multi_gpu_monte_carlo.jl
+T1	exec	src/chapter12/multi_gpu_monte_carlo.jl
 T1	exec	src/chapter12/neural_network.jl
 T1	exec	src/chapter12/ray_tracer.jl
 T2	exec	src/chapter12/sobel_filter.jl
 T2	exec	src/chapter12/sobel_optimized.jl
 T1	exec	src/chapter12/sobel_shared.jl
 T1	exec	src/chapter12/trapezoidal.jl
-T1	DEFONLY	src/chapter12/tsp.jl
-SKIP:experimental	exec	src/chapter13/documentation.jl
-SKIP:experimental	exec	src/chapter13/enterprise.jl
+T1	exec	src/chapter12/tsp.jl
+# Chapter 13's listings are facets of one package, CUDAReductions.jl, which
+# the chapter describes but the repo does not contain. tools/fixtures holds a
+# minimal stand-in so the chapter's own test suite can run; the other three
+# are not programs at all:
+#
+#   documentation  partially exercised 2026-08-07 against a scratch docs tree:
+#                  the docstring parses and makedocs accepts its arguments,
+#                  getting as far as docstring cross-referencing. It cannot
+#                  complete without a real package docs/ tree, because the
+#                  listing defines its own parallel_reduce stub in Main which
+#                  collides with the package's in the @docs block. Finding
+#                  that far was worth it: the file had no `using CUDA` at all
+#                  despite declaring input::CuVector, so it could not even be
+#                  loaded. Fixed.
+#   packaging      the module region include()s utils.jl/reduce.jl/scan.jl,
+#                  which are a package's files, not this file's
+#   enterprise     create_registry pushes to git@github.com:company/..., a
+#                  fictional remote
+SKIP:not-a-program	exec	src/chapter13/documentation.jl
+SKIP:not-a-program	exec	src/chapter13/enterprise.jl
 T1	exec	src/chapter13/kernel_design.jl
-SKIP:experimental	exec	src/chapter13/packaging.jl
+SKIP:not-a-program	exec	src/chapter13/packaging.jl
 T1	exec	src/chapter13/portable_kernels.jl
-SKIP:non-NVIDIA	exec	src/chapter13/testing.jl
+# Verified 2026-08-07 against the fixture: 14/14 and 2/2 tests pass. The
+# fixture had to be corrected to satisfy the chapter's own specification --
+# @test_throws ArgumentError parallel_reduce(+, CuArray(Float32[])) -- so the
+# suite is checking something real. Needs its own project:
+#
+#   julia --project=/tmp/ch13 -e 'using Pkg; Pkg.add("CUDA");
+#       Pkg.develop(path="tools/fixtures/CUDAReductions")'
+#   julia --project=/tmp/ch13 src/chapter13/testing.jl
+SKIP:fixture-project	exec	src/chapter13/testing.jl
 T1	exec	src/chapter12/digital_twin.jl
+T1	exec	src/chapter08/cuda_graphs.jl
+T1	exec	src/chapter12/sobel_basic.jl

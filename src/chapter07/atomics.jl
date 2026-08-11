@@ -57,3 +57,35 @@ function histogram_privatized!(hist, data, nbins)
     return nothing
 end
 # --- end:histogram_privatized ---
+
+# ---------------------------------------------------------------------------
+# Driver, outside the tagged region so the book is unaffected. Histograms are
+# checked against a CPU count of the same data: an atomic that drops updates
+# under contention still produces a plausible-looking histogram, so only the
+# exact bin counts distinguish a correct kernel from a lossy one.
+let N = 1 << 18, nbins = 64
+    counter = CUDA.zeros(Int32, 1)
+    @cuda threads=256 blocks=16 atomic_increment!(counter)
+    CUDA.synchronize()
+    @assert CUDA.@allowscalar(counter[1]) == 256 * 16 "counter: $(CUDA.@allowscalar counter[1])"
+
+    data = CUDA.rand(Float32, N)
+    h = Array(data)
+    want = zeros(Int32, nbins)
+    for v in h
+        want[clamp(floor(Int, v * nbins) + 1, 1, nbins)] += 1
+    end
+
+    hist = CUDA.zeros(Int32, nbins)
+    @cuda threads=256 blocks=64 atomic_add_example!(hist, data, nbins)
+    CUDA.synchronize()
+    @assert Array(hist) == want "global-atomic histogram differs from the CPU count"
+
+    # Shared-memory privatization: the launch must size the dynamic shared
+    # array for nbins Int32s, or the kernel writes past the end of it.
+    hist2 = CUDA.zeros(Int32, nbins)
+    @cuda threads=256 blocks=64 shmem=nbins*sizeof(Int32) histogram_privatized!(hist2, data, nbins)
+    CUDA.synchronize()
+    @assert Array(hist2) == want "privatized histogram differs from the CPU count"
+    println("atomics: counter, global histogram and privatized histogram all CORRECT")
+end

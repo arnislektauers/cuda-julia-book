@@ -19,8 +19,9 @@ tspan = (0.0f0, 200.0f0)
 p = @SVector Float32[0.3, 0.1]
 prob = ODEProblem{false}(sir, u0, tspan, p)
 
-# Vary parameters across ensemble
-function prob_func(prob, i, repeat)
+# Vary parameters across ensemble. `ctx` is an EnsembleContext carrying
+# per-trajectory metadata (ctx.sim_id, ctx.repeat, ctx.rng).
+function prob_func(prob, ctx)
     remake(prob, p = @SVector Float32[
         0.1f0 + 0.4f0 * rand(Float32),
         0.05f0 + 0.15f0 * rand(Float32)

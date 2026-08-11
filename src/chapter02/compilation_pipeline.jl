@@ -18,8 +18,11 @@ A = CUDA.rand(Float32, N)
 B = CUDA.rand(Float32, N)
 C = similar(A)
 
-@device_code_typed @cuda threads=256 blocks=1 add_kernel!(C, A, B)
-@device_code_llvm @cuda threads=256 blocks=1 add_kernel!(C, A, B)
-@device_code_ptx @cuda threads=256 blocks=1 add_kernel!(C, A, B)
-@device_code_sass @cuda threads=256 blocks=1 add_kernel!(C, A, B)
+nthreads = 256
+nblocks = cld(N, nthreads)          # 4 blocks cover all 1024 elements
+
+@device_code_typed @cuda threads=nthreads blocks=nblocks add_kernel!(C, A, B)
+@device_code_llvm @cuda threads=nthreads blocks=nblocks add_kernel!(C, A, B)
+@device_code_ptx @cuda threads=nthreads blocks=nblocks add_kernel!(C, A, B)
+@device_code_sass @cuda threads=nthreads blocks=nblocks add_kernel!(C, A, B)
 # --- end:gpu_introspection ---

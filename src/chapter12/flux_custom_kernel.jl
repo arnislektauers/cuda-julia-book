@@ -1,7 +1,7 @@
 # Custom CUDA kernel integration with Flux.jl automatic differentiation
 
 # --- begin:flux_custom ---
-using Flux, CUDA, ChainRulesCore
+using Flux, CUDA, cuDNN, ChainRulesCore
 
 # Step 1: Forward kernel
 # smooth_clamp(x) = x / (1 + |x|) is the standard softsign function

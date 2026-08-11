@@ -47,7 +47,7 @@ function portable_reduce(op, input::AbstractGPUVector{T}) where T
     backend = KernelAbstractions.get_backend(input)
     N = length(input)
     threads = 256
-    blocks = min(cld(N, threads), 1024)  # grid-stride loop in the kernel covers larger N
+    blocks = min(cld(N, threads), 1024)  # grid-stride loop covers larger N
     output = similar(input, blocks)
 
     kernel! = ka_reduce_kernel!(backend, threads)

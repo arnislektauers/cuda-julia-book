@@ -3,7 +3,7 @@
 using CUDA
 
 # --- begin:dispatch_specialized ---
-# Generic implementation --- works on any GPU (or CPU)
+# Generic implementation: works on any GPU (or CPU)
 function my_transform!(output::AbstractArray, input::AbstractArray)
     output .= sin.(input) .+ input .^ 2
     return output

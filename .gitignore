@@ -9,7 +9,6 @@ docs/build/
 # Snippets regenerated from src/ by `make listings` are ignored; the few
 # hand-authored standalone listings that have no src/ tagged region are kept.
 /listings/*
-!/listings/ch01_device_query.jl
 !/listings/ch01_vec_add_gpu.jl
 !/listings/ch08_cuda_graph_capture.jl
 !/listings/ch12_sobel_kernel.jl

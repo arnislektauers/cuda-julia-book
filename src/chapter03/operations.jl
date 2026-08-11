@@ -6,7 +6,7 @@ using CUDA, Statistics
 A = CUDA.rand(Float32, 1_000_000)
 
 s = sum(A)                           # GPU reduction -> scalar
-p = prod(A[1:100])                   # Product (on a view)
+p = prod(A[1:100])                   # Product of a slice (copies; @view avoids it)
 mn = minimum(A)                      # Global minimum
 mx = maximum(A)                      # Global maximum
 
@@ -19,10 +19,10 @@ row_sums = sum(B, dims=2)            # 1024×1 CuArray
 # --- begin:numerical_patterns ---
 A = CUDA.rand(Float32, 1_000_000)
 
-# L2 norm — single kernel, no temporaries
+# L2 norm: fused map-reduction, no temporaries
 norm_l2 = sqrt(mapreduce(x -> x^2, +, A))
 
-# Mean absolute error — single kernel
+# Mean absolute error: fused map-reduction
 B = CUDA.rand(Float32, 1_000_000)
 mae = mapreduce((a, b) -> abs(a - b), +, A, B; init = 0.0f0) / length(A)
 

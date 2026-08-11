@@ -47,7 +47,7 @@ end
 # --- begin:soa_vs_aos ---
 N = 10_000                   # number of particles
 
-# Array of Structs (AoS) — poor coalescing
+# Array of Structs (AoS): poor coalescing
 struct Particle
     x::Float32
     y::Float32
@@ -57,7 +57,7 @@ end
 particles = CuArray([Particle(rand(Float32, 4)...) for _ in 1:N])
 # Reading all x values: stride = sizeof(Particle) = 16 bytes -> non-coalesced
 
-# Struct of Arrays (SoA) — good coalescing
+# Struct of Arrays (SoA): good coalescing
 struct ParticlesSoA
     x::CuVector{Float32}
     y::CuVector{Float32}

@@ -51,3 +51,28 @@ function heat2d_kernel!(u_new, u, alpha_dt_dx2, Nx, Ny)
     return nothing
 end
 # --- end:heat2d_kernel ---
+
+# ---------------------------------------------------------------------------
+# Driver. Outside the tagged region, so it never reaches the book: the listing
+# shows the kernel, and this exercises it. Without a driver the file only
+# defines a method, and Julia compiles no function body until it is called --
+# an out-of-bounds index or a bad launch config would pass unnoticed.
+#
+# Checked rather than merely run: a single interior hot cell must diffuse to
+# its four neighbours, and with alpha*dt/dx^2 = 0.2 the centre drops to
+# 1 - 4*0.2 = 0.2 while each neighbour rises to 0.2.
+let Nx = 64, Ny = 64, r = 0.2f0
+    u = CUDA.zeros(Float32, Nx, Ny)
+    CUDA.@allowscalar u[32, 32] = 1.0f0
+    u_new = copy(u)
+    threads = (BX, BY)
+    blocks = (cld(Nx, BX), cld(Ny, BY))
+    @cuda threads=threads blocks=blocks heat2d_kernel!(u_new, u, r, Nx, Ny)
+    CUDA.synchronize()
+    h = Array(u_new)
+    @assert isapprox(h[32, 32], 0.2f0; atol = 1f-5) "centre: $(h[32,32])"
+    for (i, j) in ((31, 32), (33, 32), (32, 31), (32, 33))
+        @assert isapprox(h[i, j], 0.2f0; atol = 1f-5) "neighbour ($i,$j): $(h[i,j])"
+    end
+    println("heat2d_kernel!: diffusion step CORRECT")
+end

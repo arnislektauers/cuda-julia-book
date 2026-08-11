@@ -51,3 +51,21 @@ function full_reduce_sum!(output, input)
     return nothing
 end
 # --- end:full_reduce ---
+
+# ---------------------------------------------------------------------------
+# Driver, outside the tagged region so the book is unaffected. Sums a vector of
+# ones, where the expected total is exactly representable in Float32 and any
+# lost or double-counted element shows up as an integer discrepancy.
+#
+# Two details the kernel depends on and a careless caller would get wrong: the
+# shared array is dynamic, so the launch must pass shmem for 32 Float32s, and
+# the block reduction assumes whole warps, so threads must be a multiple of 32.
+let N = 1 << 20, threads = 256, blocks = 64
+    input = CUDA.ones(Float32, N)
+    output = CUDA.zeros(Float32, blocks)
+    @cuda threads=threads blocks=blocks shmem=32*sizeof(Float32) full_reduce_sum!(output, input)
+    CUDA.synchronize()
+    total = sum(Array(output))
+    @assert total == Float32(N) "grid-stride reduction: got $total, expected $N"
+    println("full_reduce_sum!: $(Int(total)) == $N CORRECT")
+end

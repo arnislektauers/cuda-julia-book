@@ -18,8 +18,11 @@ function wmma_gemm_kernel!(D, A, B, C, M, N, K)
     conf = WMMA.Config{M_TILE, N_TILE, K_TILE, Float32}
 
     # Warp-level: each warp computes one 16×16 output tile
-    warp_row = ((blockIdx().x - 1) * blockDim().y + threadIdx().y - 1) * M_TILE + 1
-    warp_col = ((blockIdx().y - 1) * blockDim().x + threadIdx().x - 1) ÷ 32 * N_TILE + 1
+    # (x holds 32 lanes per warp, y indexes warps directly)
+    warp_i = (blockIdx().x - 1) * blockDim().y + threadIdx().y - 1
+    warp_j = ((blockIdx().y - 1) * blockDim().x + threadIdx().x - 1) ÷ 32
+    warp_row = warp_i * M_TILE + 1
+    warp_col = warp_j * N_TILE + 1
 
     # Column-major: element (row, col) has 1-based linear index
     # row + (col - 1) * ld, with leading dimension ld = M for A and C/D,

@@ -20,6 +20,13 @@ using CUDA
 end
 # --- end:indexing_demo ---
 
+# saxpy_kernel! is defined in the chapter text; repeated here so this source
+# file runs standalone (the launch region below invokes it).
+@kernel function saxpy_kernel!(Y, α, X)
+    i = @index(Global)
+    @inbounds Y[i] = α * X[i] + Y[i]
+end
+
 # --- begin:kernel_launch ---
 using KernelAbstractions
 using CUDA  # Provides CUDABackend

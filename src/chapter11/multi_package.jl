@@ -3,7 +3,7 @@
 using CUDA, DataFrames, Flux, CairoMakie, Statistics, Optimisers
 
 # --- begin:time_series_pipeline ---
-using CUDA, DataFrames, Flux, Optimisers, CairoMakie, Statistics
+using CUDA, cuDNN, DataFrames, Flux, Optimisers, CairoMakie, Statistics
 
 # -- Stage 1: Data Ingestion --
 # Synthetic time series data (in practice: CSV.jl, Arrow.jl, etc.)
@@ -53,20 +53,29 @@ opt_state = Optimisers.setup(Adam(0.001f0), model)
 batch_size = 256
 n_epochs = 20
 
-for epoch in 1:n_epochs
-    # Mini-batch training
-    for start in 1:batch_size:n_train-batch_size
-        idx = start:start+batch_size-1
-        x_batch = d_X[:, idx]
-        y_batch = d_y[:, idx]
+# Training loop. Keep it inside a function: a top-level `for` loop that
+# reassigns `model` would create a new local instead of updating the global,
+# and working through globals is slow in any case.
+function train!(model, opt_state, d_X, d_y, n_train, batch_size, n_epochs)
+    for epoch in 1:n_epochs
+        # Mini-batch training
+        for start in 1:batch_size:n_train-batch_size
+            idx = start:start+batch_size-1
+            x_batch = d_X[:, idx]
+            y_batch = d_y[:, idx]
 
-        grads = Flux.gradient(model) do m
-            Flux.mse(m(x_batch), y_batch)
+            grads = Flux.gradient(model) do m
+                Flux.mse(m(x_batch), y_batch)
+            end
+
+            opt_state, model = Optimisers.update(opt_state, model, grads[1])
         end
-
-        opt_state, model = Optimisers.update(opt_state, model, grads[1])
     end
+    return model, opt_state
 end
+
+model, opt_state = train!(model, opt_state, d_X, d_y,
+                          n_train, batch_size, n_epochs)
 
 # -- Stage 4: Visualization --
 # Predict on held-out windows after the training range

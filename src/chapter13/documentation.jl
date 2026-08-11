@@ -1,5 +1,10 @@
 # Documentation with Documenter.jl
 
+# Outside the tagged regions: the listing's signature says CuVector, so the
+# file needs CUDA loaded to be read at all. The chapter has established this
+# long before, which is why the listing itself does not repeat it.
+using CUDA
+
 # --- begin:docstring_example ---
 """
     parallel_reduce(op, input::CuVector{T}) -> T

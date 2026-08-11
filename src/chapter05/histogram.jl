@@ -19,11 +19,12 @@ end
 
 # Driver code
 N = 1_000_000
-num_bins = 256
+num_bins = Int32(256)
 data = CUDA.rand(Float32, N)
 hist = CUDA.zeros(Int32, num_bins)
 
-@cuda threads=256 blocks=min(cld(N, 256), 256) histogram_kernel!(hist, data, Int32(num_bins))
+blocks = min(cld(N, 256), 256)
+@cuda threads=256 blocks=blocks histogram_kernel!(hist, data, num_bins)
 CUDA.synchronize()
 
 @assert sum(Array(hist)) == N
