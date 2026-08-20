@@ -17,6 +17,7 @@ page.
 | `tools/listing-runner/` | Harness that runs every `src/` program on a GPU host and records PASS / FAIL / TIMEOUT. |
 | `figures/scripts/` | Figure-generation scripts with a pinned `Project.toml` + `Manifest.toml` (CairoMakie). |
 | `figures/chapterNN/plot-*.jl` | Per-chapter plotting scripts. |
+| `figures/data/` | Reference measurements produced by those scripts on the book's GPU, so you can compare your own run against the published numbers. See [`figures/data/README.md`](figures/data/README.md) for per-file provenance. |
 | `Project.toml` | Core ("T1") package environment for the listings. |
 
 The `listings/` directory holding the exact snippets printed in the book is
@@ -117,5 +118,21 @@ before launching Julia, or point CUDA.jl at the system toolkit deliberately with
 
 ## License
 
-Code in this repository is released under the MIT License (see `LICENSE`). The
-book text is copyright the author and Springer and is not included here.
+**Code** — MIT License (see `LICENSE`).
+
+**Measurement data** (`figures/data/`) — [Creative Commons Attribution 4.0
+International](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0). Reuse
+it freely, including commercially, with credit:
+
+> Arnis Lektauers, *CUDA Programming with Julia* companion measurements, 2026.
+> Licensed under CC BY 4.0.
+
+**Third-party data — not redistributed here.** Two figures in the book are
+plotted from external datasets, both CC BY 4.0 at their source: Epoch AI's
+[Data on Machine Learning Hardware](https://epoch.ai/data/machine-learning-hardware)
+and Karl Rupp's [50 Years of Microprocessor Trend
+Data](https://github.com/karlrupp/microprocessor-trend-data). Fetch them from
+their upstreams; [`figures/data/README.md`](figures/data/README.md) explains
+where to put the Epoch AI export so the figure script picks it up.
+
+**Book text** — copyright the author and Springer, not included here.
