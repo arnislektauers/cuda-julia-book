@@ -1,0 +1,5 @@
+# impl_idx  effective_gbps
+1        2.97  # naive atomic
+2      308.10  # tree (shmem)
+3      469.54  # warp shuffle
+4      404.50  # CUDA.jl sum()

@@ -408,6 +408,9 @@ function main()
                 xover)
     end
 
+    # A companion-repo clone has no figures/data/ until something writes one.
+    mkpath(OUT_DIR)
+
     path = joinpath(OUT_DIR, "nn-batch-scaling.dat")
     open(path, "w") do io
         println(io, "# CPU vs GPU training scaling for the Chapter 12 quadrant MLP (2 -> $HIDDEN -> 1,")

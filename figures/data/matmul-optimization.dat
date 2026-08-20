@@ -1,0 +1,6 @@
+# impl_idx  gflops  speedup_vs_uncoalesced
+1       576.5      1.00  # naive uncoalesced
+2      2412.4      4.18  # naive coalesced
+3      3135.8      5.44  # tiled16
+4      7215.6     12.52  # tiled32 coarsened
+5     20161.0     34.97  # cuBLAS

@@ -1,0 +1,11 @@
+device=NVIDIA GeForce RTX 4070 SUPER
+cpu=13th Gen Intel(R) Core(TM) i5-13600K (20 logical cores)
+blas=libopenblas64_.so
+blas_threads=1
+julia_threads=1
+julia=1.12.6
+cuda_jl=6.2.1
+cuda_runtime=12.9.0
+cuda_driver=13.3.0
+total_samples=100000
+crossover_batch=1664
