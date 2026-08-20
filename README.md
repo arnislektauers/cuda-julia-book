@@ -31,9 +31,9 @@ The listings were compiled and run on real hardware:
 | Component | Version |
 |:---|:---|
 | GPU | NVIDIA GeForce RTX 4070 SUPER (12 GB, Ada Lovelace, compute capability 8.9) |
-| NVIDIA driver | Minimum 525.60 (any driver new enough for CUDA.jl 6.10's toolkit artifact) |
+| NVIDIA driver | Minimum 525.60 (any driver new enough for CUDA.jl 6.2.1's toolkit artifact) |
 | Julia | 1.12.6 |
-| CUDA.jl | 6.10 |
+| CUDA.jl | 6.2.1 |
 | OS | Linux 6.8 (x86_64) |
 
 CUDA.jl downloads a compatible CUDA toolkit automatically as a Julia artifact,

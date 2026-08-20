@@ -7,7 +7,7 @@ using PkgTemplates
 
 template = Template(;
     user = "username",
-    authors = ["Author Name"],
+    authors = ["Your Name"],
     plugins = [
         License(; name = "MIT"),
         Git(; manifest=false),
