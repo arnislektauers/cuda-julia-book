@@ -23,8 +23,8 @@ prob = ODEProblem{false}(sir, u0, tspan, p)
 # per-trajectory metadata (ctx.sim_id, ctx.repeat, ctx.rng).
 function prob_func(prob, ctx)
     remake(prob, p = @SVector Float32[
-        0.1f0 + 0.4f0 * rand(Float32),
-        0.05f0 + 0.15f0 * rand(Float32)
+        0.1f0 + 0.4f0 * rand(ctx.rng, Float32),
+        0.05f0 + 0.15f0 * rand(ctx.rng, Float32)
     ])
 end
 

@@ -109,7 +109,12 @@ nccl_comm = NCCL.Communicator(ngpus_per_node, local_rank; unique_id=uid)
 
 function hierarchical_allreduce!(data, nccl_comm, comm,
                                  node_comm, local_rank, rank)
-    chunk_size = length(data) ÷ NCCL.size(nccl_comm)
+    ngpus_per_node = NCCL.size(nccl_comm)
+    @assert(rem(length(data), ngpus_per_node) == 0,
+            "data length must be divisible by the local GPU count")
+    @assert(MPI.has_cuda(),
+            "hierarchical AllReduce needs a CUDA-aware MPI build")
+    chunk_size = length(data) ÷ ngpus_per_node
 
     # Step 1: Intra-node ReduceScatter via NCCL
     local_chunk = similar(data, chunk_size)

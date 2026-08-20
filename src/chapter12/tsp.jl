@@ -1,4 +1,4 @@
-# Traveling Salesman Problem -- GPU tour length computation
+# Traveling Salesman Problem: GPU tour length computation
 
 # --- begin:tsp_tour_length ---
 using CUDA
@@ -27,7 +27,7 @@ end
 # Driver, outside the tagged region so the book is unaffected. Two tours over
 # four cities on a unit square: the perimeter tour 1-2-3-4 measures 4.0, and
 # the diagonal tour 1-3-2-4 measures 2 + 2*sqrt(2). Checking the value matters
-# more than completing here -- the kernel indexes a flattened distance matrix
+# more than completing here: the kernel indexes a flattened distance matrix
 # by hand, which is exactly the kind of arithmetic that runs without erroring
 # and returns nonsense.
 let n = 4, ntours = 2

@@ -8,7 +8,7 @@
 #
 # Run this before full_pipeline.jl; both use the working directory for I/O.
 #
-# Not included by any chapter -- a companion to retained, unpublished source.
+# Not included by any chapter: a companion to retained, unpublished source.
 
 using DataFrames, CSV, Random
 

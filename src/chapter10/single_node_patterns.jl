@@ -148,14 +148,21 @@ CUDA.synchronize(transfer_stream)
 # --- begin:overlap_computation ---
 using CUDA
 
-# Streams and both buffer sets are created once, outside the loop
+# Streams and both buffer sets are created once, outside the loop. The
+# communication stream and destination buffer belong to a distinct peer GPU.
+@assert length(CUDA.devices()) >= 2 "this example needs two or more GPUs"
+source_device = CUDA.device()
+peer_device = collect(CUDA.devices())[2]
 compute_stream = CuStream()
+
+CUDA.device!(peer_device)
 comm_stream = CuStream()
+remote_buf = CUDA.zeros(Float32, 1_000_000)  # Destination on the peer device
+CUDA.device!(source_device)
 
 N = 1_000_000
 inputs = (CUDA.rand(Float32, N), CUDA.rand(Float32, N))
 results = (CUDA.zeros(Float32, N), CUDA.zeros(Float32, N))
-remote_buf = CUDA.zeros(Float32, N)    # Destination on the peer device
 
 nsteps = 100
 for k in 1:nsteps
@@ -176,7 +183,8 @@ for k in 1:nsteps
         end
     end
 
-    # Both streams must drain before the halves swap roles
+    # Both streams must drain before the halves swap roles. A production
+    # pipeline can replace these waits with cross-stream events.
     CUDA.synchronize(compute_stream)
     CUDA.synchronize(comm_stream)
 end
@@ -195,7 +203,7 @@ function measure_throughputs()
         elapsed = CUDA.@elapsed for _ in 1:1000
             a .= a .* 2.0f0 .+ 1.0f0
         end
-        return 1.0 / elapsed
+        return (length(a) * 1000) / elapsed  # elements per second
     end
     total = sum(throughputs)
     return throughputs ./ total    # Normalized fractions

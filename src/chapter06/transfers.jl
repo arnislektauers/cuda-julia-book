@@ -8,7 +8,7 @@ using CUDA
 # Allocate a regular host array and pin (page-lock) it
 N = 1_000_000
 h_pinned = Vector{Float32}(undef, N)
-CUDA.pin(h_pinned)
+h_pinned = CUDA.pin(h_pinned)
 
 # Fill with data
 h_pinned .= rand(Float32, N)

@@ -14,6 +14,9 @@ const N_TILE = 16
 const K_TILE = 16
 
 function wmma_gemm_kernel!(D, A, B, C, M, N, K)
+    # This educational kernel assumes M, N, and K are multiples of 16 and
+    # that the launch maps complete 32-thread warps to complete tiles.
+    # Production code must add bounds handling for partial tiles.
     # Every WMMA call takes the shape/precision configuration
     conf = WMMA.Config{M_TILE, N_TILE, K_TILE, Float32}
 

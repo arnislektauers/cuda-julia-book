@@ -41,11 +41,12 @@ end
 # --- end:ka_reduce_kernel ---
 
 # --- begin:portable_reduce ---
-using GPUArraysCore: AbstractGPUVector
+using GPUArraysCore: AbstractGPUArray
 
-function portable_reduce(op, input::AbstractGPUVector{T}) where T
+function portable_reduce(op, input::AbstractGPUArray{T,1}) where T
     backend = KernelAbstractions.get_backend(input)
     N = length(input)
+    N > 0 || throw(ArgumentError("cannot reduce an empty input"))
     threads = 256
     blocks = min(cld(N, threads), 1024)  # grid-stride loop covers larger N
     output = similar(input, blocks)

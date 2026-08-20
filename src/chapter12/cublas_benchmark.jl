@@ -9,7 +9,7 @@ N = 4096
 A = CUDA.rand(Float32, N, N)
 B = CUDA.rand(Float32, N, N)
 
-# Matrix multiplication -- dispatches to cuBLAS SGEMM
+# Matrix multiplication: dispatches to cuBLAS SGEMM
 C = A * B
 
 # Benchmark GPU vs CPU

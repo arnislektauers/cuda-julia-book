@@ -1,4 +1,4 @@
-# Modular GPU kernel design -- interfaces, dispatch, extensibility
+# Modular GPU kernel design: interfaces, dispatch, extensibility
 
 using CUDA
 
@@ -118,7 +118,7 @@ end
 
 Base.:+(a::Vec3{T}, b::Vec3{T}) where {T} = Vec3(a.x + b.x, a.y + b.y, a.z + b.z)
 
-# Extend the library's identity element -- the extension point in action.
+# Extend the library's identity element: the extension point in action.
 # `parallel_reduce(+, cu_vec3_array)` now works with no change to the kernel.
 CUDAReductions._identity(::typeof(+), ::Type{Vec3{T}}) where {T} =
     Vec3(zero(T), zero(T), zero(T))

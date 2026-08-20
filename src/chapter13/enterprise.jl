@@ -1,4 +1,4 @@
-# Enterprise deployment -- private registries and benchmarking
+# Enterprise deployment: private registries and benchmarking
 
 using LocalRegistry
 

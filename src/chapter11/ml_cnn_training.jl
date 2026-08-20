@@ -1,4 +1,4 @@
-# Machine learning -- end-to-end Flux.jl training loop on the GPU
+# Machine learning: end-to-end Flux.jl training loop on the GPU
 #
 # Not included by any chapter; retained as a worked reference.
 # Kept apart from ml_flux.jl because that file binds `loss` as a variable

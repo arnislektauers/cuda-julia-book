@@ -91,15 +91,17 @@ A_csc = CuSparseMatrixCSC(A_gpu)  # CSR -> CSC
 # --- end:cusparse_ops ---
 
 # --- begin:cudnn_ops ---
-using CUDA, cuDNN
+using CUDA, NNlib, cuDNN   # cuDNN activates NNlib's GPU extension
 
-# Direct cuDNN usage (rarely needed; use Flux.jl instead)
-# Convolution, pooling, and normalization are wrapped
+# Julia's convolution layout is (W, H, C, N): 16 RGB images of 32x32
+x = CUDA.randn(Float32, 32, 32, 3, 16)
+w = CUDA.randn(Float32, 3, 3, 3, 8)      # 8 filters, 3x3, over 3 channels
 
-# High-level usage via Flux.jl (recommended)
-# using Flux
-# model = Chain(Conv((3,3), 1=>16, relu), MaxPool((2,2)), ...)
-# gpu_model = model |> gpu
-# gpu_data = data |> gpu
-# output = gpu_model(gpu_data)
+# On CuArray inputs these NNlib calls reach cuDNN
+y = NNlib.conv(x, w; pad=1)              # cudnnConvolutionForward
+p = NNlib.maxpool(y, (2, 2))             # cudnnPoolingForward
+s = NNlib.softmax(reshape(p, :, 16))     # cudnnSoftmaxForward
+
+# An activation broadcasts as an ordinary CUDA kernel, not a cuDNN call
+a = relu.(p)
 # --- end:cudnn_ops ---

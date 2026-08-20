@@ -1,4 +1,4 @@
-# Multi-package synergy -- end-to-end GPU workflow
+# Multi-package synergy: end-to-end GPU workflow
 
 using CUDA, DataFrames, Flux, CairoMakie, Statistics, Optimisers
 

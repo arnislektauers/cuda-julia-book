@@ -1,4 +1,4 @@
-# Sobel edge detection on a real photograph -- companion-repository variant.
+# Sobel edge detection on a real photograph: companion-repository variant.
 #
 # This file is NOT the version printed in the book: it contributes no tagged
 # regions. The printed listing is the dependency-free, synthetic-image variant
@@ -8,7 +8,7 @@
 #
 # What this variant adds, and why it is worth keeping: a real 8-bit test image
 # (cameraman) with the 0-255 conversion, and a `sobel_cpu` reference for
-# validating the GPU result -- the correctness check that Chapter 12's coding
+# validating the GPU result: the correctness check that Chapter 12's coding
 # exercise 1 asks the reader to write. Note two deliberate differences from the
 # printed kernel: borders are zeroed rather than clamped, and the thread mapping
 # is a flat 1D index decomposed into column-major (x, y) rather than a 2D grid.

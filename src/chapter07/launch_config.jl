@@ -59,7 +59,7 @@ end
 # take the kernel as an argument and neither ships one, so the driver supplies
 # a 1D and a 2D kernel of the shape each expects.
 #
-# These are timing sweeps, so there is no reference answer -- what can be
+# These are timing sweeps, so there is no reference answer: what can be
 # checked is that every configuration in the sweep actually launches (a block
 # size the kernel cannot support would throw), that the tuner returns a
 # configuration from its own search space, and that the kernel still computes

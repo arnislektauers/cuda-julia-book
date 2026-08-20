@@ -46,7 +46,7 @@ let threads = 256
     fixed = CUDA.zeros(Float32, threads)
     @cuda threads=threads blocks=1 shmem=threads*sizeof(Float32) fixed_kernel!(fixed, A)
     CUDA.synchronize()
-    @assert Array(fixed) == want "the synchronized kernel is wrong -- that is a real bug"
+    @assert Array(fixed) == want "the synchronized kernel is wrong: that is a bug"
 
     racy = CUDA.zeros(Float32, threads)
     @cuda threads=threads blocks=1 shmem=threads*sizeof(Float32) racy_kernel!(racy, A)

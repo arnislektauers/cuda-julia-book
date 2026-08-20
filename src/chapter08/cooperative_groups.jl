@@ -50,7 +50,7 @@ function cooperative_reduce!(output, input, partial)
     CG.sync(grid)
 
     # Phase 2: thread 1 of block 1 sums all per-block partials.
-    # A sequential loop over at most gridDim().x (here 256) values is
+    # A sequential loop over at most gridDim().x values is
     # negligible compared to phase 1 and trivially correct.
     if bid == 1 && tid == 1
         total = 0.0f0
@@ -62,13 +62,15 @@ function cooperative_reduce!(output, input, partial)
     return nothing
 end
 
-# Launch with cooperative=true
+# A cooperative launch must fit all blocks resident at once. One block is
+# valid on every supported device; larger grids require a device-specific
+# occupancy calculation.
 N = 10_000_000
 input = CUDA.rand(Float32, N)
 partial = CuArray{Float32}(undef, 256)
 output = CuArray{Float32}(undef, 1)
 
-@cuda(cooperative=true, threads=256, blocks=256,
+@cuda(cooperative=true, threads=256, blocks=1,
       shmem=32*sizeof(Float32),
       cooperative_reduce!(output, input, partial))
 # --- end:cooperative_reduce ---

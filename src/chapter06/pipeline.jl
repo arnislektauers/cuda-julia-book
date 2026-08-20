@@ -9,8 +9,8 @@ function pipelined_computation!(d_result, h_data, h_result, chunk_size)
     streams = [CuStream() for _ in 1:3]
 
     # Pin host buffers so copies are truly asynchronous and can overlap
-    CUDA.pin(h_data)
-    CUDA.pin(h_result)
+    h_data = CUDA.pin(h_data)
+    h_result = CUDA.pin(h_result)
 
     d_chunk = [CuArray{Float32}(undef, chunk_size) for _ in 1:3]
 

@@ -1,4 +1,4 @@
-# Visualization -- publication figures from GPU results (CairoMakie backend)
+# Visualization: publication figures from GPU results (CairoMakie backend)
 #
 # Kept separate from visualization_glmakie.jl: Makie activates a backend when
 # it is loaded, and the last one loaded wins. Splitting the two also keeps

@@ -10,7 +10,13 @@ using CUDAReductions
 
 @testset "CUDAReductions.jl" begin
 
-    @testset "parallel_reduce" begin
+    @testset "CPU fallback" begin
+        x = [1.0f0, 2.0f0, 3.0f0, 4.0f0]
+        @test parallel_reduce(+, x) ≈ 10.0f0
+    end
+
+    if CUDA.functional()
+        @testset "parallel_reduce" begin
         # Test with known values
         x = CuArray(Float32[1, 2, 3, 4, 5])
         @test parallel_reduce(+, x) ≈ 15.0f0
@@ -29,15 +35,18 @@ using CUDAReductions
         # Edge cases
         @test parallel_reduce(+, CuArray(Float32[42.0])) ≈ 42.0f0
         @test_throws ArgumentError parallel_reduce(+, CuArray(Float32[]))
-    end
-
-    @testset "type genericity" begin
-        for T in (Float16, Float32, Float64)
-            x = CuArray(T[1, 2, 3, 4])
-            result = parallel_reduce(+, x)
-            @test result isa T
-            @test result ≈ T(10)
         end
+
+        @testset "type genericity" begin
+            for T in (Float16, Float32, Float64)
+                x = CuArray(T[1, 2, 3, 4])
+                result = parallel_reduce(+, x)
+                @test result isa T
+                @test result ≈ T(10)
+            end
+        end
+    else
+        @warn "CUDA not available, skipping GPU tests"
     end
 
 end
@@ -50,7 +59,7 @@ import Pkg
 
 # AMDGPU is optional: load it only when the test environment declares it
 if haskey(Pkg.project().dependencies, "AMDGPU")
-    using AMDGPU
+    @eval using AMDGPU
 end
 
 @testset "CUDAReductions.jl" begin

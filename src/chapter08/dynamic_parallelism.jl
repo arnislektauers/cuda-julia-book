@@ -6,7 +6,8 @@ using CUDA
 function parent_kernel!(output, input, threshold)
     i = (blockIdx().x - 1) * blockDim().x + threadIdx().x
     if i <= length(input) && @inbounds(input[i]) > threshold
-        # Launch a child kernel from the device
+        # Every qualifying parent thread launches a child. Real workloads
+        # should usually aggregate or otherwise restrict these launches.
         @cuda dynamic=true threads=32 child_kernel!(output, input, i)
     end
     return nothing
@@ -39,6 +40,6 @@ let N = 1024, threshold = 0.5f0
     a, got = Array(input), Array(output)
     want = [x > threshold ? x * 10.0f0 : 0.0f0 for x in a]
     @assert got == want "child launches wrote $(count(got .!= want)) wrong elements"
-    @assert count(a .> threshold) > 0 "threshold selected nothing -- the test proves nothing"
+    @assert count(a .> threshold) > 0 "threshold selected nothing: the test proves nothing"
     println("dynamic_parallelism: $(count(a .> threshold)) child launches CORRECT")
 end

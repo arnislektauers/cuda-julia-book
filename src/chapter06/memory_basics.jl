@@ -22,8 +22,8 @@ A = CUDA.fill(1.0f0, 128)
 # --- begin:lookup_const ---
 function lookup_kernel!(out, table, indices)
     i = (blockIdx().x - 1) * blockDim().x + threadIdx().x
-    # Wrap the read-only table in CUDA.Const inside the kernel to use the
-    # read-only data cache (the __ldg path) for the gather loads.
+    # Wrap the read-only table in CUDA.Const inside the kernel to enable
+    # compiler-assisted read-only cached loads.
     ctable = CUDA.Const(table)
     if i <= length(indices)
         @inbounds out[i] = ctable[indices[i]]

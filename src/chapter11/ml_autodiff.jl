@@ -1,4 +1,4 @@
-# Machine learning -- custom automatic differentiation rules on the GPU
+# Machine learning: custom automatic differentiation rules on the GPU
 #
 # Neither ChainRulesCore nor Enzyme collides with Flux or Lux exports, but
 # these regions are grouped here so the framework files stay single-purpose.
@@ -38,14 +38,16 @@ function my_kernel!(y, x, α)
     return nothing
 end
 
-# Host wrapper that launches the kernel; Enzyme differentiates
-# through the @cuda launch via CUDA.jl's Enzyme extension
+# Host wrapper that launches the kernel. Differentiating this heterogeneous
+# host/device boundary is version-sensitive and requires a supported
+# Enzyme/CUDA integration; do not assume every CUDA.jl @cuda launch works.
 function apply!(y, x, α)
     @cuda threads=256 blocks=cld(length(y), 256) my_kernel!(y, x, α)
     return nothing
 end
 
-# Enzyme generates the gradient kernel automatically
+# In supported configurations, Enzyme can generate a derivative for the
+# device kernel. Verify this example against the pinned Enzyme/CUDA versions.
 x = CUDA.rand(Float32, 1024)
 y = CUDA.zeros(Float32, 1024)
 dx = CUDA.zeros(Float32, 1024)

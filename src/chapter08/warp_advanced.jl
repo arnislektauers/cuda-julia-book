@@ -56,7 +56,7 @@ end
 #
 # Compaction writes in whatever order warps reserve their slots, so the output
 # is a permutation of the expected values, not a sequence: sort before
-# comparing. The count is the stricter check -- a ballot or prefix-count that
+# comparing. The count is the stricter check: a ballot or prefix-count that
 # is off by one produces a plausible list with the wrong length, or silently
 # overlaps two warps' slots.
 let N = 1 << 16, threshold = 0.5f0

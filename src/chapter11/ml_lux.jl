@@ -1,4 +1,4 @@
-# Machine learning -- Lux.jl GPU integration
+# Machine learning:Lux.jl GPU integration
 #
 # Kept separate from ml_flux.jl: Flux and Lux both export names such as
 # `Chain` and `Dense`, so a single script that loads both leaves those

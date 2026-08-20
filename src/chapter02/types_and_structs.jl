@@ -32,8 +32,9 @@ struct Box
     value::Any           # Every use of this field is inferred as Any
 end
 
-# Bad: box.value * 2.0f0 cannot be resolved statically; the compiler
-# emits a runtime call (jl_apply_generic), which GPUCompiler rejects
+# Bad: the concrete type of box.value is unknown at compile time,
+# so multiplication requires dynamic dispatch, which is unsupported
+# in GPU kernels and rejected by GPUCompiler.
 kernel_bad!(out, box::Box) = out[threadIdx().x] = box.value * 2.0f0
 
 # Fix: parameterize so the field type is concrete

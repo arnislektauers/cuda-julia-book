@@ -1,6 +1,6 @@
 # CUDA graphs: capturing a repeated kernel sequence and replaying it.
 #
-# Definitions only -- the three run_iterations_* variants are called from the
+# Definitions only: the three run_iterations_* variants are called from the
 # chapter text and from benchmarks, not at load time, so this file defines the
 # comparison (plain launches vs. explicit capture/instantiate vs. @captured)
 # without executing an iteration loop.
@@ -29,9 +29,11 @@ function run_iterations_graph!(u, v, iters)
     threads = 256
     blocks = cld(length(u), threads)
 
-    # Warm up: launch once before capturing, so that JIT compilation
-    # (triggered by the first launch) happens outside the capture.
-    @cuda threads=threads blocks=blocks step_kernel!(u, v)
+    # Compile without executing before capturing, so JIT compilation
+    # happens outside the capture and does not add an extra iteration.
+    # `launch=false` takes no launch-time keywords; threads and blocks are
+    # supplied by the launches below.
+    @cuda launch=false step_kernel!(u, v)
 
     # Capture one iteration into a graph.
     graph = CUDA.capture() do
@@ -70,7 +72,7 @@ end
 #
 # u <- (u + v)/2 repeated `iters` times drives u geometrically toward v, so the
 # expected value is closed-form and a dropped or duplicated launch shifts it by
-# a factor of two -- far outside the tolerance.
+# a factor of two: far outside the tolerance.
 let N = 1 << 16, iters = 20
     v = CUDA.fill(1.0f0, N)
     u0 = CUDA.zeros(Float32, N)
@@ -80,13 +82,12 @@ let N = 1 << 16, iters = 20
     c = run_iterations_captured!(copy(u0), v, iters)
     CUDA.synchronize()
 
-    # run_iterations_graph! launches once to warm up before capturing, so it
-    # performs iters+1 steps rather than iters. That is a property of the
-    # listing, not an error -- assert what it actually does.
+    # run_iterations_graph! compiles without executing before capturing, so
+    # all three variants perform exactly `iters` updates.
     want_plain = 1.0f0 - 0.5f0^iters
-    want_graph = 1.0f0 - 0.5f0^(iters + 1)
+    want_graph = want_plain
     @assert all(isapprox.(Array(a), want_plain; atol = 1f-6)) "plain: $(Array(a)[1])"
     @assert all(isapprox.(Array(c), want_plain; atol = 1f-6)) "captured: $(Array(c)[1])"
     @assert all(isapprox.(Array(b), want_graph; atol = 1f-6)) "graph: $(Array(b)[1])"
-    println("cuda graphs: plain and @captured agree; capture form does iters+1 by design")
+    println("cuda graphs: plain, explicit graph, and @captured agree")
 end

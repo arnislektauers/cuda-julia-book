@@ -11,7 +11,7 @@ template = Template(;
     plugins = [
         License(; name = "MIT"),
         Git(; manifest=false),
-        GitHubActions(; extra_versions=["1.12", "nightly"]),
+        GitHubActions(),
         Documenter{GitHubActions}(),
         Codecov(),
     ],
@@ -43,15 +43,15 @@ module CUDAReductionsKernelAbstractionsExt
 
 using CUDAReductions
 using KernelAbstractions
-using GPUArraysCore: AbstractGPUVector
+using GPUArraysCore: AbstractGPUArray
 
 # Portable kernel implementation
 @kernel function _ka_reduce_kernel!(output, @Const(input), op, identity, N)
     # ... kernel code from §13.2.4
 end
 
-# Method that dispatches for any AbstractGPUVector
-function CUDAReductions.parallel_reduce(op, input::AbstractGPUVector{T}) where T
+# Method that dispatches for any one-dimensional AbstractGPUArray
+function CUDAReductions.parallel_reduce(op, input::AbstractGPUArray{T,1}) where T
     # ... portable implementation
 end
 

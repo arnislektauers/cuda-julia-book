@@ -1,4 +1,4 @@
-# GPU compilation pipeline -- introspection and kernel examples
+# GPU compilation pipeline: introspection and kernel examples
 
 using CUDA
 

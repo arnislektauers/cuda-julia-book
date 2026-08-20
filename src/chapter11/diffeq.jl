@@ -1,4 +1,4 @@
-# Differential equations -- GPU integration with DifferentialEquations.jl
+# Differential equations: GPU integration with DifferentialEquations.jl
 
 using OrdinaryDiffEq, CUDA
 
@@ -46,7 +46,7 @@ prob = ODEProblem(lotka_volterra!, u0, tspan, p)
 # Generate 10,000 parameter variations. `ctx` is an EnsembleContext carrying
 # per-trajectory metadata (ctx.sim_id, ctx.repeat, ctx.rng).
 function prob_func(prob, ctx)
-    remake(prob; p = prob.p .* (1.0f0 .+ 0.1f0 .* randn(Float32, 4)))
+    remake(prob; p = prob.p .* (1.0f0 .+ 0.1f0 .* randn(ctx.rng, Float32, 4)))
 end
 
 ensemble_prob = EnsembleProblem(prob; prob_func=prob_func)
@@ -71,7 +71,8 @@ prob = ODEProblem{false}(lotka_volterra,
 
 # Vary parameters across the ensemble via SVector
 function prob_func(prob, ctx)
-    remake(prob; p = prob.p .* (1.0f0 .+ 0.1f0 .* @SVector(randn(Float32, 4))))
+    perturbation = @SVector [randn(ctx.rng, Float32) for _ in 1:4]
+    remake(prob; p = prob.p .* (1.0f0 .+ 0.1f0 .* perturbation))
 end
 
 ensemble_prob = EnsembleProblem(prob; prob_func=prob_func)
@@ -91,10 +92,8 @@ function gray_scott_gpu!(du_flat, u_flat, p, t)
     du = reshape(@view(du_flat[1:half]), N, N)
     dv = reshape(@view(du_flat[half+1:end]), N, N)
 
-    # Periodic Laplacian via circshift, as a 5-point stencil in grid units
-    # (the standard Gray-Scott scaling; the diffusion coefficients absorb the
-    # grid spacing). Each shifted copy supplies one stencil neighbor, so no
-    # scalar indexing occurs on the GPU.
+    # Periodic Laplacian via circshift, a 5-point stencil in grid units (the
+    # diffusion coefficients absorb the grid spacing). No scalar indexing.
     lap_u = circshift(u, (1, 0)) .+ circshift(u, (-1, 0)) .+
             circshift(u, (0, 1)) .+ circshift(u, (0, -1)) .- 4.0f0 .* u
     lap_v = circshift(v, (1, 0)) .+ circshift(v, (-1, 0)) .+
@@ -106,18 +105,14 @@ function gray_scott_gpu!(du_flat, u_flat, p, t)
     return nothing
 end
 
-# Initial condition built on the CPU: u background 1, v background 0,
-# with a small central square perturbation that seeds pattern formation
+# CPU initial condition: u = 1, v = 0, plus a central square perturbation
 N = 256
 u_init = ones(Float32, N, N)
 v_init = zeros(Float32, N, N)
 c = N ÷ 2
 u_init[c-10:c+10, c-10:c+10] .= 0.5f0
 v_init[c-10:c+10, c-10:c+10] .= 0.25f0
-
-# Concatenate the two fields and move the state to the GPU
-u0 = CuArray(vcat(vec(u_init), vec(v_init)))
-
+u0 = CuArray(vcat(vec(u_init), vec(v_init)))  # Both fields, moved to GPU
 p = (0.16f0, 0.08f0, 0.06f0, 0.062f0, N)  # Du, Dv, F, k, N (Int)
 tspan = (0.0f0, 1000.0f0)
 

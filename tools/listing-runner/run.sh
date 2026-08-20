@@ -56,9 +56,14 @@ echo ">>> Julia: $($JULIA --version)   GPU: $(nvidia-smi --query-gpu=name --form
 echo ">>> Instantiating $ENVTIER environment at $PROJ ..."
 mkdir -p "$PROJ"
 if [ "$ENVTIER" = "T1" ]; then
-  DEPS='["CUDA","Adapt","BenchmarkTools","KernelAbstractions","StaticArrays","GPUArraysCore","LinearAlgebra","SparseArrays","Statistics","Random","Distributed","Test"]'
+  # AMDGPU is here for src/chapter09/dispatch_portability.jl, which defines a
+  # my_transform!(::ROCArray, ...) method and so needs the package loadable at
+  # definition time. AMDGPU.jl loads on an NVIDIA host (functional() is false,
+  # the type and the @roc macro exist), which is all this file requires -- the
+  # AMD path is executed on real hardware by src/chapter09/amdgpu_examples.jl.
+  DEPS='["CUDA","AMDGPU","Adapt","BenchmarkTools","KernelAbstractions","StaticArrays","GPUArraysCore","LinearAlgebra","SparseArrays","Statistics","Random","Distributed","Test"]'
 else
-  DEPS='["CUDA","Adapt","BenchmarkTools","KernelAbstractions","StaticArrays","GPUArraysCore","LinearAlgebra","SparseArrays","Statistics","Random","Distributed","Test","Flux","Lux","Zygote","Enzyme","DiffEqGPU","OrdinaryDiffEq","DataFrames","CSV","MLUtils","OneHotArrays","Optimisers","ChainRulesCore","cuDNN","cuTENSOR","CairoMakie","GLMakie","Images","TestImages"]'
+  DEPS='["CUDA","Adapt","BenchmarkTools","KernelAbstractions","StaticArrays","GPUArraysCore","LinearAlgebra","SparseArrays","Statistics","Random","Distributed","Test","Flux","Lux","Zygote","Enzyme","DiffEqGPU","OrdinaryDiffEq","DataFrames","CSV","MLUtils","OneHotArrays","Optimisers","ChainRulesCore","NNlib","cuDNN","cuTENSOR","CairoMakie","GLMakie","Images","TestImages"]'
 fi
 $JULIA --project="$PROJ" -e "using Pkg; for p in $DEPS; try; Pkg.add(p); catch e; @warn \"add failed\" p e; end; end" > "$LOGS/_instantiate.log" 2>&1
 echo ">>> Add exit: $?  (log: $LOGS/_instantiate.log)"

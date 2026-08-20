@@ -18,8 +18,8 @@ end
 #
 # The listing ccalls into "path/to/libmykernels.so", a library the reader is
 # expected to have built. That placeholder is why this file had never run: the
-# ccall signature -- and in particular CuPtr{Cfloat} for a device pointer,
-# which is the part readers get wrong -- was never exercised.
+# ccall signature, and in particular CuPtr{Cfloat} for a device pointer,
+# which is the part readers get wrong, was never exercised.
 #
 # So build the library. The .cu below is the C++ side the chapter describes,
 # compiled to exactly the path the listing names, relative to the working

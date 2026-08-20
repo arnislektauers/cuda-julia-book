@@ -45,14 +45,14 @@ function reduce_kernel!(output, input)
     i = workitemIdx().x + (workgroupIdx().x - 1) * workgroupDim().x
 
     @inbounds shared[tid] = i <= length(input) ? input[i] : 0f0
-    AMDGPU.sync_workgroup()
+    AMDGPU.Device.sync_workgroup()
 
     s = workgroupDim().x >> 1
     while s > 0
         if tid <= s
             @inbounds shared[tid] += shared[tid + s]
         end
-        AMDGPU.sync_workgroup()
+        AMDGPU.Device.sync_workgroup()
         s >>= 1
     end
 
@@ -67,8 +67,7 @@ end
 # Driver, outside the tagged region so the book is unaffected. The listings
 # print nothing, so completing proves only that they did not crash.
 #
-# Needs an AMD GPU with a working ROCm stack. RTU has none -- its `epyc` nodes
-# are AMD CPUs with NVIDIA GPUs -- so this was verified on a rented MI300X
+# Needs an AMD GPU with a working ROCm stack. This was verified on MI300X
 # (gfx942, ROCm 6.4.4, AMDGPU.jl on Julia 1.12.6). See runlist.txt for the two
 # environment traps that cost an earlier attempt.
 let

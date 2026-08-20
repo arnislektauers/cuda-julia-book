@@ -55,7 +55,7 @@ end
 #
 # On a single-GPU host this exercises the one-device path: the loop runs once,
 # ngpus == 1, and the average is over a single result. The multi-device
-# behaviour -- work actually split across devices -- can only be checked where
+# behavior, work actually split across devices, can only be checked where
 # there is more than one, so what this asserts is the estimator, not the split.
 #
 # The tolerance is derived, not guessed: the estimate has standard error

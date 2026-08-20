@@ -22,9 +22,11 @@ function run_iterations_graph!(u, v, iters)
     threads = 256
     blocks = cld(length(u), threads)
 
-    # Warm up: launch once before capturing, so that JIT compilation
-    # (triggered by the first launch) happens outside the capture.
-    @cuda threads=threads blocks=blocks step_kernel!(u, v)
+    # Compile without executing before capturing, so JIT compilation
+    # happens outside the capture and does not add an extra iteration.
+    # `launch=false` takes no launch-time keywords; threads and blocks are
+    # supplied by the launches below.
+    @cuda launch=false step_kernel!(u, v)
 
     # Capture one iteration into a graph.
     graph = CUDA.capture() do

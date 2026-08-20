@@ -14,8 +14,9 @@ Perform a parallel tree reduction of `input` using binary operator `op`.
 # Arguments
 - `op`: An associative binary function (e.g., `+`, `max`, `min`, `*`).
   Must be safe for GPU execution (no heap allocations or I/O).
-- `input::CuVector{T}`: Input vector on the GPU. Element type `T` must
-  satisfy `isbitstype(T) == true`.
+- `input::CuVector{T}`: Input vector on the GPU. Element type `T` must be
+  GPU-compatible; values passed into the kernel must be isbits-compatible or
+  adapted by the library.
 
 # Returns
 - A scalar of type `T` representing the reduced result.

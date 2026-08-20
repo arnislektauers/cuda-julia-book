@@ -39,7 +39,7 @@ groups = cld(length(a), items)
 #
 # Needs an Intel GPU exposing a Level Zero device. Verified on homebox's
 # integrated UHD 770 (i5-13600K, oneAPI.jl 2.8.0) after enabling integrated
-# graphics in UEFI -- the iGPU is off by default when a discrete card is
+# graphics in UEFI: the iGPU is off by default when a discrete card is
 # fitted. Primary display stays on the NVIDIA card; the iGPU is compute-only.
 let
     A = oneArray(rand(Float32, 256, 256))

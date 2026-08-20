@@ -1,4 +1,4 @@
-# Data science and analytics -- GPU-accelerated DataFrame operations
+# Data science and analytics: GPU-accelerated DataFrame operations
 
 using CUDA, DataFrames, Statistics
 
